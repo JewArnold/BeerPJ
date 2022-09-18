@@ -1,12 +1,10 @@
 package com.fedorov.beerpj.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Data;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @Entity
@@ -21,7 +19,7 @@ public class Beer implements Serializable {
     private String name;
 
 
-
+    @JsonBackReference
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "producer", referencedColumnName = "factory_name")
     private Producer producer;

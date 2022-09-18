@@ -8,13 +8,14 @@ import lombok.ToString;
 import javax.persistence.Column;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Size;
 import java.util.List;
 
 @Data
-@ToString(exclude = "beerList")
 public class ProducerDTO {
 
+    @Size(min = 2, max = 30, message = "Имя производителя должно быть от 2 до 30 символов")
     private String factoryName;
 
-    private List<Beer> beerList;
 }

@@ -2,7 +2,9 @@ package com.fedorov.beerpj.controllers;
 
 
 import com.fedorov.beerpj.DTO.BeerDTO;
+import com.fedorov.beerpj.DTO.ProducerDTO;
 import com.fedorov.beerpj.entities.Beer;
+import com.fedorov.beerpj.entities.Producer;
 import com.fedorov.beerpj.services.BeerService;
 import com.fedorov.beerpj.services.ProducerService;
 import com.fedorov.beerpj.utils.BeerErrorResponse;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @RestController
@@ -48,6 +51,7 @@ public class BeerController {
     @GetMapping()
     public List<BeerDTO> getBeerList() {
         return beerService.findAll().stream().map(this::convertToBeerDto).collect(Collectors.toList());
+
     }
 
 
@@ -68,27 +72,25 @@ public class BeerController {
 
 
         Beer beer = convertToBeer(beerDTO);
-
         beerValidator.validate(beer, bindingResult);
 
-        if (bindingResult.hasErrors()) {
-            StringBuilder errorMessage = new StringBuilder();
-
-            List<FieldError> errors = bindingResult.getFieldErrors();
-
-            for (FieldError error :
-                    errors) {
-
-                errorMessage
-                        .append(error.getField())
-                        .append("-")
-                        .append(error.getDefaultMessage())
-                        .append(";  ");
-            }
-            throw new BeerException(errorMessage.toString());
-
-
-        }
+//        if (bindingResult.hasErrors()) {
+//            StringBuilder errorMessage = new StringBuilder();
+//
+//            List<FieldError> errors = bindingResult.getFieldErrors();
+//
+//            for (FieldError error :
+//                    errors) {
+//
+//                errorMessage
+//                        .append(error.getField())
+//                        .append("-")
+//                        .append(error.getDefaultMessage())
+//                        .append(";  ");
+//            }
+//            throw new BeerException(errorMessage.toString());
+//
+//        }
 
         beerService.save(beer);
 
@@ -108,25 +110,29 @@ public class BeerController {
 
     private BeerDTO convertToBeerDto(Beer beer) {
 
-        BeerDTO beerDTO = new BeerDTO();
-        beerDTO.setName(beer.getName());
-        beerDTO.setProducerName(beer.getProducer().getFactoryName());
+        BeerDTO dto = mapper.map(beer, BeerDTO.class);
 
-        return beerDTO;
+        dto.setProducerDTO(mapper.map(beer.getProducer(), ProducerDTO.class));
 
-//        return mapper.map(beer, BeerDTO.class);
+        return dto;
     }
 
     private Beer convertToBeer(BeerDTO beerDTO) {
-
-        Beer beer = new Beer();
-
-        beer.setProducer(producerService.findProducerByName(beerDTO.getProducerName()).orElse(null));
-        beer.setName(beerDTO.getName());
+        Producer producer;
+        try {
+            producer = producerService.findProducerByName(beerDTO.getProducerDTO().getFactoryName()).orElseThrow(new Supplier<Throwable>() {
+                @Override
+                public Throwable get() {
+                    return new BeerException("Производитель не найден");
+                }
+            });
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+        Beer beer = mapper.map(beerDTO, Beer.class);
+        beer.setProducer(producer);
 
         return beer;
-//        return mapper.map(beerDTO, Beer.class);
-
     }
 
     @ExceptionHandler

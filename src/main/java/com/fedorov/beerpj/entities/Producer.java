@@ -1,7 +1,6 @@
 package com.fedorov.beerpj.entities;
 
 import lombok.Data;
-import lombok.ToString;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -22,7 +21,6 @@ public class Producer implements Serializable {
 
 
     @OneToMany(mappedBy = "producer")
-    @ToString.Exclude
     private List<Beer> beerList;
 
 
