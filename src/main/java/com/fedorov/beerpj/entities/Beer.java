@@ -19,8 +19,7 @@ public class Beer implements Serializable {
     private String name;
 
 
-    @JsonBackReference
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @JoinColumn(name = "producer", referencedColumnName = "factory_name")
     private Producer producer;
 

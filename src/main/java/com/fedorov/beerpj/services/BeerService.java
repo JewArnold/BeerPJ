@@ -3,18 +3,23 @@ package com.fedorov.beerpj.services;
 import com.fedorov.beerpj.entities.Beer;
 import com.fedorov.beerpj.entities.Producer;
 import com.fedorov.beerpj.repositories.BeerRepository;
+import com.fedorov.beerpj.utils.BeerException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 @Service
 public class BeerService {
 
     private final ProducerService producerService;
+
     private final BeerRepository beerRepository;
 
     @Autowired
@@ -24,32 +29,54 @@ public class BeerService {
     }
 
 
-    public List<Beer> findAll() {
-        return beerRepository.findAll();
+    public List<Beer> findAll(int page, int size) {
+        return beerRepository.findAll(PageRequest.of(page, size)).getContent();
     }
 
 
-    public Optional<Beer> findById(int id) {
-        return beerRepository.findById(id);
+    public Beer findById(int id) {
+        Beer beer = null;
+        try {
+            beer = beerRepository.findById(id).orElseThrow(new Supplier<Throwable>() {
+                @Override
+                public Throwable get() {
+                    return new BeerException("Пиво не найдено");
+                }
+            });
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+
+
+        return beer;
     }
 
     @Transactional
     public void save(Beer beer) {
-
-        Producer producer = producerService.findProducerByName(beer.getProducer().getFactoryName()).orElse(null);
+        Producer producer = producerService.findProducerByName(beer.getProducer().getFactoryName());
         beer.setProducer(producer);
         beerRepository.save(beer);
+    }
 
+    @Transactional
+    public void delete(int id) {
+
+        Beer checkBeer = findById(id); // здесь заложена проверка на наличие пива с таким айдишником
+
+        beerRepository.deleteById(id);
     }
 
     public Optional<Beer> findByName(String name) {
         return beerRepository.findBeerByName(name);
     }
 
-    @Transactional
-    public void delete(Beer beer) {
-        beerRepository.delete(beer);
-    }
 
+    public List<Beer> findBeerByProducer(int producerId) {
+
+        Producer producer = producerService.findProducerById(producerId);
+
+        return beerRepository.findBeerByProducer(producer);
+
+    }
 
 }

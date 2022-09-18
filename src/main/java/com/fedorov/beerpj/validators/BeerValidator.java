@@ -2,7 +2,6 @@ package com.fedorov.beerpj.validators;
 
 import com.fedorov.beerpj.entities.Beer;
 import com.fedorov.beerpj.services.BeerService;
-import com.fedorov.beerpj.services.ProducerService;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.Errors;
@@ -13,12 +12,10 @@ import org.springframework.validation.Validator;
 public class BeerValidator extends Validation implements Validator {
 
     private final BeerService beerService;
-    private final ProducerService producerService;
 
 
-    public BeerValidator(BeerService beerService, ProducerService producerService) {
+    public BeerValidator(BeerService beerService) {
         this.beerService = beerService;
-        this.producerService = producerService;
     }
 
     @Override

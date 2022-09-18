@@ -15,12 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @RestController
@@ -29,12 +27,8 @@ public class BeerController {
 
 
     private final BeerService beerService;
-
     private final BeerValidator beerValidator;
-
-
     private final ModelMapper mapper;
-
     private final ProducerService producerService;
 
 
@@ -49,49 +43,33 @@ public class BeerController {
 
     //учесть пагинацию и сортировку по типу, имени, дате добавления, количеству
     @GetMapping()
-    public List<BeerDTO> getBeerList() {
-        return beerService.findAll().stream().map(this::convertToBeerDto).collect(Collectors.toList());
+    public List<BeerDTO> getBeerList(@RequestParam (name = "page", required = false, defaultValue = "0") int page,
+                                     @RequestParam(name = "pageSize", defaultValue = "5") int pageSize) {
+
+
+        return beerService.findAll(page, pageSize).stream().map(this::convertToBeerDto).collect(Collectors.toList());
 
     }
 
 
     @GetMapping("/{id}")
-    public ResponseEntity<HttpStatus> getBeerById(@PathVariable int id) {
-        /*
-        Реализовать
-        */
-        return ResponseEntity.ok(HttpStatus.OK);
+    public BeerDTO getBeerById(@PathVariable int id) {
+
+        Beer beer = beerService.findById(id);
+
+        return convertToBeerDto(beer);
     }
 
 
     //Если пиво есть в БД - обновляем количество
-    // если нет - добавляем пиво в бд
+    // если нет - добавляем пиво в бд - реализовать с появлением количества
     @PostMapping("/add")
     public ResponseEntity<HttpStatus> addBeer(@RequestBody @Valid BeerDTO beerDTO,
                                               BindingResult bindingResult) {
 
-
         Beer beer = convertToBeer(beerDTO);
+
         beerValidator.validate(beer, bindingResult);
-
-//        if (bindingResult.hasErrors()) {
-//            StringBuilder errorMessage = new StringBuilder();
-//
-//            List<FieldError> errors = bindingResult.getFieldErrors();
-//
-//            for (FieldError error :
-//                    errors) {
-//
-//                errorMessage
-//                        .append(error.getField())
-//                        .append("-")
-//                        .append(error.getDefaultMessage())
-//                        .append(";  ");
-//            }
-//            throw new BeerException(errorMessage.toString());
-//
-//        }
-
         beerService.save(beer);
 
         return ResponseEntity.ok(HttpStatus.OK);
@@ -99,12 +77,13 @@ public class BeerController {
 
 
     //Если количество в параметре больше - то зануляем
-    @PatchMapping("/{id}")
-    public ResponseEntity<HttpStatus> send(@PathVariable String id) {
-        /*
-        Реализовать
-        */
-        return ResponseEntity.ok(HttpStatus.OK);
+    //Реализовать в дальнейшем
+    @DeleteMapping("/{id}")
+    public int remove(@PathVariable int id) {
+
+        beerService.delete(id);
+
+        return id;
     }
 
 
@@ -118,17 +97,8 @@ public class BeerController {
     }
 
     private Beer convertToBeer(BeerDTO beerDTO) {
-        Producer producer;
-        try {
-            producer = producerService.findProducerByName(beerDTO.getProducerDTO().getFactoryName()).orElseThrow(new Supplier<Throwable>() {
-                @Override
-                public Throwable get() {
-                    return new BeerException("Производитель не найден");
-                }
-            });
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
+
+        Producer  producer = producerService.findProducerByName(beerDTO.getProducerDTO().getFactoryName());
         Beer beer = mapper.map(beerDTO, Beer.class);
         beer.setProducer(producer);
 

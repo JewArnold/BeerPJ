@@ -4,7 +4,6 @@ import com.fedorov.beerpj.utils.BeerException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 
-import javax.swing.*;
 import java.util.List;
 
 public class Validation {
