@@ -2,6 +2,7 @@
 REST application, where simple CRUD functions are realized.
 
 Current functional:
+
 -getting beerlist. Default qty per page - 5 pcs. Sorting still is not realized.
 
 -getting beer by id
