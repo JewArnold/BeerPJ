@@ -4,7 +4,9 @@ import com.fedorov.beerpj.entities.Beer;
 import com.fedorov.beerpj.entities.Producer;
 import com.fedorov.beerpj.repositories.ProducerRepository;
 import com.fedorov.beerpj.utils.BeerException;
+import com.fedorov.beerpj.utils.ProducerException;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +36,7 @@ public class ProducerService {
             return producerRepository.findById(id).orElseThrow(new Supplier<Throwable>() {
                 @Override
                 public Throwable get() {
-                    return new BeerException("Производитель не найден");
+                    return new ProducerException("Производитель не найден");
                 }
             });
         } catch (Throwable e) {
@@ -48,7 +50,7 @@ public class ProducerService {
             return producerRepository.findProducerByFactoryName(name).orElseThrow(new Supplier<Throwable>() {
                 @Override
                 public Throwable get() {
-                    return new BeerException("Производитель не найден");
+                    return new ProducerException("Производитель не найден");
                 }
             });
         } catch (Throwable e) {
@@ -57,7 +59,7 @@ public class ProducerService {
     }
 
 
-    public List<Beer> getBeerList(int id) {
-        return beerService.findBeerByProducer(id);
+    public List<Beer> getBeerList(int id, int page, int size) {
+        return beerService.findBeerByProducer(id, page, size).getContent();
     }
 }

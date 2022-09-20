@@ -23,6 +23,9 @@ public class Beer implements Serializable {
     @JoinColumn(name = "producer", referencedColumnName = "factory_name")
     private Producer producer;
 
+    @Column(name = "amount")
+    private Integer amount;
+
 
 
 

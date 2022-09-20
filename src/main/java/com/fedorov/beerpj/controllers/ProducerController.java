@@ -4,8 +4,9 @@ import com.fedorov.beerpj.DTO.BeerDTO;
 import com.fedorov.beerpj.DTO.ProducerDTO;
 import com.fedorov.beerpj.entities.Beer;
 import com.fedorov.beerpj.entities.Producer;
-import com.fedorov.beerpj.services.BeerService;
 import com.fedorov.beerpj.services.ProducerService;
+import com.fedorov.beerpj.utils.ErrorResponse;
+import com.fedorov.beerpj.utils.ProducerException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,8 +37,10 @@ public class ProducerController {
     }
 
     @GetMapping("/{id}")
-    public List<BeerDTO> getBeerList(@PathVariable("id") int id) {
-        return producerService.getBeerList(id).stream()
+    public List<BeerDTO> getBeerList(@PathVariable("id") int id,
+                                     @RequestParam(name = "page", required = false, defaultValue = "0") int page,
+                                     @RequestParam(name = "pageSize", defaultValue = "5") int pageSize) {
+        return producerService.getBeerList(id, page, pageSize).stream()
                 .map(this::convertToBeerDto)
                 .collect(Collectors.toList());
     }
@@ -51,5 +54,16 @@ public class ProducerController {
         BeerDTO dto = mapper.map(beer, BeerDTO.class);
         dto.setProducerDTO(mapper.map(beer.getProducer(), ProducerDTO.class));
         return dto;
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> exceptionHandler(ProducerException exception) {
+
+        ErrorResponse response = new ErrorResponse(
+                exception.getMessage(),
+                System.currentTimeMillis()
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 }

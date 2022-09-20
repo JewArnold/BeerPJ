@@ -7,8 +7,7 @@ import com.fedorov.beerpj.entities.Beer;
 import com.fedorov.beerpj.entities.Producer;
 import com.fedorov.beerpj.services.BeerService;
 import com.fedorov.beerpj.services.ProducerService;
-import com.fedorov.beerpj.utils.BeerErrorResponse;
-import com.fedorov.beerpj.utils.BeerException;
+import com.fedorov.beerpj.utils.ErrorResponse;
 import com.fedorov.beerpj.validators.BeerValidator;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,9 +40,9 @@ public class BeerController {
     }
 
 
-    //учесть пагинацию и сортировку по типу, имени, дате добавления, количеству
+    //учесть сортировку по типу, имени, дате добавления, количеству
     @GetMapping()
-    public List<BeerDTO> getBeerList(@RequestParam (name = "page", required = false, defaultValue = "0") int page,
+    public List<BeerDTO> getBeerList(@RequestParam(name = "page", required = false, defaultValue = "0") int page,
                                      @RequestParam(name = "pageSize", defaultValue = "5") int pageSize) {
 
 
@@ -61,27 +60,24 @@ public class BeerController {
     }
 
 
-    //Если пиво есть в БД - обновляем количество
-    // если нет - добавляем пиво в бд - реализовать с появлением количества
     @PostMapping("/add")
     public ResponseEntity<HttpStatus> addBeer(@RequestBody @Valid BeerDTO beerDTO,
                                               BindingResult bindingResult) {
 
         Beer beer = convertToBeer(beerDTO);
 
-        beerValidator.validate(beer, bindingResult);
         beerService.save(beer);
 
         return ResponseEntity.ok(HttpStatus.OK);
     }
 
 
-    //Если количество в параметре больше - то зануляем
-    //Реализовать в дальнейшем
-    @DeleteMapping("/{id}")
-    public int remove(@PathVariable int id) {
 
-        beerService.delete(id);
+    @DeleteMapping("/{id}")
+    public int remove(@PathVariable int id,
+                      @RequestParam (value = "amount", required = false, defaultValue = "1") int forRemove) {
+
+        beerService.remove(id, forRemove);
 
         return id;
     }
@@ -98,7 +94,7 @@ public class BeerController {
 
     private Beer convertToBeer(BeerDTO beerDTO) {
 
-        Producer  producer = producerService.findProducerByName(beerDTO.getProducerDTO().getFactoryName());
+        Producer producer = producerService.findProducerByName(beerDTO.getProducerDTO().getFactoryName());
         Beer beer = mapper.map(beerDTO, Beer.class);
         beer.setProducer(producer);
 
@@ -106,9 +102,9 @@ public class BeerController {
     }
 
     @ExceptionHandler
-    public ResponseEntity<BeerErrorResponse> exceptionHandler(BeerException exception) {
+    public ResponseEntity<ErrorResponse> exceptionHandler(RuntimeException exception) {
 
-        BeerErrorResponse response = new BeerErrorResponse(
+        ErrorResponse response = new ErrorResponse(
                 exception.getMessage(),
                 System.currentTimeMillis()
         );

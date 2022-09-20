@@ -13,8 +13,9 @@ public class BeerDTO implements Serializable {
     @Size(min = 2, max = 30, message = "Название должно быть от 2 до 30 символов")
     private String name;
 
-    private ProducerDTO producerDTO;
+    private Integer amount;
 
+    private ProducerDTO producerDTO;
 
 
 }
